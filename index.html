@@ -27,25 +27,32 @@
                 <b-form-group label="CEP" label-for="cep">
                     <b-form-input v-mask="'##.###-###'" id="cep" v-model="convidado.endereco.cep" type="text" placeholder="Ex. 79.041-080" required></b-form-input>
                 </b-form-group>
-                ​ ​
-
-
                 <b-button variant="outline-warning">Limpar lista</b-button>
                 <b-button variant="outline-danger">Cancelar</b-button>
-                <b-button variant="success" @click="salvar">Salvar</b-button>
+                <b-button type="submit" variant="success" @click="salvar">Salvar</b-button>
             </form>
-            <b-table striped :items="listaConvidados" :fields="campos"></b-table>
-
+            <b-table striped :items="listaConvidados" :fields="campos">
+                <template v-slot:cell(acoes)="row">
+                    <b-button><img src="img/pencil.svg" @click="editar(row.index)" width="20" alt="icone do editar"></b-button>
+                    <b-button><img src="img/trash.svg" @click="confirmarRemocao(row.index)" width="20" alt="icone de excluir"></b-button>
+                </template>
             </b-table>
 
         </b-container>
+        <b-modal title="Alerta de Exlusão" centered v-model="exibirModalRemocao">
+            <p>Deseja Realmente Excluir?</p>
+            <template v-slot:modal-footer="{ cancel }">
+                <b-button @click="remover" variant="outline-danger">Sim</b-button>
+                <b-button @click="cancel" variant="primary">Cancelar</b-button>
+            </template>
+        </b-modal>
     </div>
 
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver " crossorigin="anonymous "></script>
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js "></script>
     <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js "></script>
     <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue-icons.min.js "></script>
-    <script src="https://cdn.jsdelivr.net/npm/v-mask/dist/v-mask.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/v-mask/dist/v-mask.min.js "></script>
     <script>
         Vue.use(VueMask.VueMaskPlugin)
             //instanciando um novo Vue
@@ -53,6 +60,9 @@
             el: "#app ",
             data: {
                 titulo: "Lista de Convidados ",
+                indiceEdicao: -1,
+                indiceRemocao: -1,
+                exibirModalRemocao: false,
                 listaConvidados: [],
                 convidado: {
                     endereco: {}
@@ -73,6 +83,10 @@
                         label: "CEP",
                         key: "endereco.cep",
                         sortable: false
+                    }, {
+                        label: "Ações",
+                        key: "acoes",
+                        sortable: false
                     }
 
                 ]
@@ -80,13 +94,33 @@
             },
             methods: {
                 salvar() {
-                    this.listaConvidados.push(this.convidado)
+                    this.indiceEdicao > -1 ?
+                        this.listaConvidados.splice(this.indiceEdicao, 1, this.convidado) :
+                        this.listaConvidados.push(this.convidado)
                     this.limpar()
                 },
                 limpar() {
                     this.convidado = {
                         endereco: {}
                     }
+                    this.indiceEdicao = -1
+                    this.indiceRemocao = -1
+                },
+                editar(index) {
+                    this.convidado = JSON.parse(JSON.stringify(this.listaConvidados[index]))
+                    this.indiceEdicao = index
+
+
+                },
+                remover() {
+                    this.listaConvidados.splice(this.indiceRemocao, 1)
+                    this.exibirModalRemocao = false
+                    this.limpar()
+
+                },
+                confirmarRemocao(index) {
+                    this.exibirModalRemocao = true
+                    this.indiceRemocao = index
                 }
             }
         })
