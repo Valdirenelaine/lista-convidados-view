@@ -12,37 +12,83 @@
 <body>
     <div id="app">
         <b-container>
-            <form>
-                <h1>{{titulo}}</h1>
-                <b-form-group label="Nome" label-for="nome">
-                    <b-form-input id="nome" v-model="convidado.nome" type="text" placeholder="Ex: Jão da Silva" required></b-form-input>
-                </b-form-group>
-                <b-form-group label="Idade" label-for="idade">
-                    <b-form-input id="idade" v-model="convidado.idade" type="number" placeholder="Ex: 20" required>
-                    </b-form-input>
-                </b-form-group>
-                <b-form-group label="Email" label-for="email">
-                    <b-form-input id="email" v-model="convidado.email" type="email" placeholder="Ex: jao@gmail.com" required></b-form-input>
-                </b-form-group>
-                <b-form-group label="CEP" label-for="cep">
-                    <b-form-input v-mask="'##.###-###'" id="cep" v-model="convidado.endereco.cep" type="text" placeholder="Ex. 79.041-080" required></b-form-input>
-                </b-form-group>
-                <b-button variant="outline-warning">Limpar lista</b-button>
-                <b-button variant="outline-danger">Cancelar</b-button>
-                <b-button type="submit" variant="success" @click="salvar">Salvar</b-button>
-            </form>
-            <b-table striped :items="listaConvidados" :fields="campos">
-                <template v-slot:cell(acoes)="row">
-                    <b-button><img src="img/pencil.svg" @click="editar(row.index)" width="20" alt="icone do editar"></b-button>
-                    <b-button><img src="img/trash.svg" @click="confirmarRemocao(row.index)" width="20" alt="icone de excluir"></b-button>
-                </template>
-            </b-table>
+            <b-alert v-for="(erro, i) in erros" variant="danger" dismissible show>{{erro}}</b-alert>
+            <b-card class="mb-5">
+                <b-row align-h="center">
+                    <b-col cols="auto">
+                        <h1 class="display-3" h-align="center">{{titulo}}</h1>
+
+                    </b-col>
+                </b-row>
+                <form>
+                    <b-row align-v="center">
+                        <b-col cols="12" md="8" lg="6">
+                            <b-form-group label="Nome" label-for="nome">
+                                <b-form-input id="nome" v-model="convidado.nome" type="text" placeholder="Ex: Jão da Silva" required></b-form-input>
+                            </b-form-group>
+                        </b-col>
+                        <b-col cols="12" md="8" lg="6">
+                            <b-form-group label="Idade" label-for="idade">
+                                <b-form-input id="idade" v-model="convidado.idade" type="number" placeholder="Ex: 20" required>
+                                </b-form-input>
+                            </b-form-group>
+                        </b-col>
+                    </b-row>
+                    <b-row align-v="center">
+                        <b-col cols="12" md="8" lg="6">
+                            <b-form-group label="Email" label-for="email">
+                                <b-form-input id="email" v-model="convidado.email" type="email" placeholder="Ex: jao@gmail.com" required></b-form-input>
+                            </b-form-group>
+                        </b-col>
+                        <b-col cols="12" md="8" lg="6">
+                            <b-form-group label="CEP" label-for="cep">
+                                <b-form-input v-mask="'##.###-###'" id="cep" v-model="convidado.endereco.cep" type="text" placeholder="Ex. 79.041-080" required></b-form-input>
+                            </b-form-group>
+                        </b-col>
+                    </b-row>
+                    <b-row align-h="end">
+                        <b-col cols="auto">
+                            <b-button variant="outline-warning" @click="removerLista">Limpar lista</b-button>
+                            <b-button variant="outline-danger" @click="limpar">Cancelar</b-button>
+                            <b-button type="button" variant="success" @click="salvar">Salvar</b-button>
+                        </b-col>
+
+                </form>
+            </b-card>
+            <b-card>
+                <b-row>
+                    <b-col cols="11">
+                        <b-form-group>
+                            <b-form-input v-model="textoBusca" type="text" placeholder="Buscar por nome"></b-form-input>
+                        </b-form-group>
+                    </b-col>
+                    <b-row align-h="end">
+                        <b-col cols="auto">
+                            <b-button variant="primary" @click="buscar">Buscar</b-button>
+                        </b-col>
+                    </b-row>
+                </b-row>
+
+                <b-table striped :items="listaConvidados" :fields="campos">
+                    <template v-slot:cell(acoes)="row">
+                        <b-button><img src="img/pencil.svg" @click="editar(row.index)" width="20" alt="icone do editar"></b-button>
+                        <b-button><img src="img/trash.svg" @click="confirmarRemocao(row.index)" width="20" alt="icone de excluir"></b-button>
+                    </template>
+                </b-table>
+            </b-card>
 
         </b-container>
-        <b-modal title="Alerta de Exlusão" centered v-model="exibirModalRemocao">
+        <b-modal title="Alerta de Exclusão" centered v-model="exibirModalRemocao">
             <p>Deseja Realmente Excluir?</p>
             <template v-slot:modal-footer="{ cancel }">
                 <b-button @click="remover" variant="outline-danger">Sim</b-button>
+                <b-button @click="cancel" variant="primary">Cancelar</b-button>
+            </template>
+        </b-modal>
+        <b-modal title="Alerta de Exclusão" centered v-model="exibirModalRemocaoLista">
+            <p>Deseja Realmente Excluir Toda a sua Lista?</p>
+            <template v-slot:modal-footer="{ cancel }">
+                <b-button @click="confirmarRemocaoLista" variant="outline-danger">Sim</b-button>
                 <b-button @click="cancel" variant="primary">Cancelar</b-button>
             </template>
         </b-modal>
@@ -59,10 +105,14 @@
         let app = new Vue({
             el: "#app ",
             data: {
+                erros: [],
                 titulo: "Lista de Convidados ",
+                textoBusca: "",
                 indiceEdicao: -1,
                 indiceRemocao: -1,
                 exibirModalRemocao: false,
+                exibirModalRemocaoLista: false,
+                convidados: [],
                 listaConvidados: [],
                 convidado: {
                     endereco: {}
@@ -94,33 +144,63 @@
             },
             methods: {
                 salvar() {
-                    this.indiceEdicao > -1 ?
-                        this.listaConvidados.splice(this.indiceEdicao, 1, this.convidado) :
-                        this.listaConvidados.push(this.convidado)
-                    this.limpar()
+                    this.validar()
+                    if (this.erros.length <= 0) {
+                        this.indiceEdicao > -1 ?
+                            this.convidados.splice(this.indiceEdicao, 1, this.convidado) :
+                            this.convidados.push(this.convidado)
+                        this.limpar()
+                        this.listaConvidados = JSON.parse(JSON.stringify(this.convidados))
+
+                    }
                 },
                 limpar() {
                     this.convidado = {
                         endereco: {}
                     }
                     this.indiceEdicao = -1
-                    this.indiceRemocao = -1
+                    this.indiceRemocao = []
                 },
                 editar(index) {
                     this.convidado = JSON.parse(JSON.stringify(this.listaConvidados[index]))
                     this.indiceEdicao = index
-
-
                 },
                 remover() {
+                    this.convidados = this.convidados.filter(e => e.email != this.listaConvidados[this.indiceRemocao].email)
                     this.listaConvidados.splice(this.indiceRemocao, 1)
+
                     this.exibirModalRemocao = false
                     this.limpar()
 
                 },
-                confirmarRemocao(index) {
+                confirmarRemocao(indice) {
                     this.exibirModalRemocao = true
-                    this.indiceRemocao = index
+                    this.indiceRemocao = indice
+                },
+                removerLista() {
+                    this.convidados.length > 0 && (this.exibirModalRemocaoLista = true)
+                },
+                confirmarRemocaoLista() {
+                    this.listaConvidados = []
+                    this.convidados = []
+                    this.exibirModalRemocaoLista = false
+                    this.limpar();
+                },
+                validar() {
+                    this.erros = [];
+                    (!this.convidado.nome) && this.erros.push("O nome é obrigatório");
+                    (!this.convidado.email) && this.erros.push("O email é obrigatório");
+                    (!this.convidado.idade) && this.erros.push("A idade é obrigatória");
+                    (!this.convidado.endereco.cep) && this.erros.push("O CEP é obrigatório");
+                    (this.convidados.findIndex(e => e.email === this.convidado.email)) > -1 && this.erros.push("O convidado já está cadastrado.");
+
+
+                },
+                buscar() {
+                    this.listaConvidados = this.convidados.filter(e => {
+                        return e.nome.toLowerCase().includes(this.textoBusca.toLowerCase())
+                    })
+
                 }
             }
         })
