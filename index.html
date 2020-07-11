@@ -240,6 +240,8 @@
                         .then((resposta) => {
                             resposta.json().then((resultado) => {
                                 this.convidado.endereco = resultado
+                                this.convidado.endereco.cidade = resultado.localidade
+                                this.convidado.endereco.estado = resultado.uf
                             })
                         })
 
