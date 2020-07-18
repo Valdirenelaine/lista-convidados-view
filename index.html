@@ -12,7 +12,7 @@
 <body>
     <div id="app">
         <b-container>
-            <b-alert v-for="(erro, i) in erros" variant="danger" dismissible show>{{erro}}</b-alert>
+            <b-alert :key="i" v-for="(erro, i) in erros" variant="danger" dismissible show>{{erro}}</b-alert>
             <b-row align-h="center">
                 <b-col cols="auto">
                     <h1 class="display-4" h-align="center">{{titulo}}</h1>
@@ -234,16 +234,25 @@
                     })
 
                 },
-                buscarCep() {
-                    this.convidado.endereco.cep.length === 10 &&
-                        fetch(`https://viacep.com.br/ws/${this.convidado.endereco.cep.replace('.','').replace('-','')}/json/`)
-                        .then((resposta) => {
-                            resposta.json().then((resultado) => {
-                                this.convidado.endereco = resultado
-                                this.convidado.endereco.cidade = resultado.localidade
-                                this.convidado.endereco.estado = resultado.uf
-                            })
-                        })
+                async buscarCep() {
+                    try {
+
+                        if (this.convidado.endereco.cep.length === 10) {
+                            let resposta = await fetch(`https://viacep.com.br/ws/${this.convidado.endereco.cep.replace('.','').replace('-','')}/json/`)
+                            let resultado = await resposta.json()
+                            if (resultado.erro) throw {
+                                mensagemCliente: "CEP não Reconhecido"
+                            }
+                            this.convidado.endereco.logradouro = resultado.logradouro
+                            this.convidado.endereco.bairro = resultado.bairro
+                            this.convidado.endereco.cidade = resultado.localidade
+                            this.convidado.endereco.estado = resultado.uf
+                        }
+
+                    } catch (erro) {
+                        console.log(erro)
+                        alert(erro.mensagemCliente || "Erro ao buscar Endereço")
+                    }
 
 
                 }
