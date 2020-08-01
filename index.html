@@ -127,8 +127,9 @@
     <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue-icons.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/v-mask/dist/v-mask.min.js"></script>
     <script type="module">
-        import { buscarPorCep } from "./services/endereco.service.js" 
-        Vue.use(VueMask.VueMaskPlugin)
+        import { EnderecoService } from "./services/endereco.service.js" 
+        
+             Vue.use(VueMask.VueMaskPlugin)
             //instanciando um novo Vue
         let app = new Vue({
             el: "#app",
@@ -239,12 +240,13 @@
                    try {
                        
                        if (this.convidado.endereco.cep.length === 10) {
-                           let resultado = await buscarPorCep(this.convidado.endereco.cep)
+                           let resultado = await EnderecoService.buscarPorCep(this.convidado.endereco.cep)
                            this.convidado.endereco.logradouro = resultado.logradouro
                            this.convidado.endereco.bairro = resultado.bairro
                            this.convidado.endereco.cidade = resultado.cidade
                            this.convidado.endereco.estado = resultado.estado
                        }
+                       this.erros = []
                    } catch (erro) {
                       this.erros.push(erro.mensagemCliente)
                        console.log(erro.message)

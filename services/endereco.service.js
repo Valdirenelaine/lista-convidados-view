@@ -1,4 +1,7 @@
-async function buscarPorCep(cep) {
+
+class EnderecoService{
+    
+static async buscarPorCep(cep) {
     try {
 
         let resposta = await fetch(`https://viacep.com.br/ws/${cep.replace('.','').replace('-','')}/json/`)
@@ -24,5 +27,7 @@ async function buscarPorCep(cep) {
         }
     }
 }
+}
 
-export { buscarPorCep }
+
+export default EnderecoService 
